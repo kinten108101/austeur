@@ -8,4 +8,4 @@ It is early in development. Feedback is welcomed!
 
 Austeur is heavily inspired by [Werdsmith](https://www.werdsmith.com/) and [Bear](https://bear.app/).
 
-The name "Austeur", pronounced /ōs-ˈtu̇r/, is a combination of "auteur", which means a creator whose style and practice are distinctive, and "austere", which means being strict or severe in discipline. This reflects the application's philosophy which is to provide user with a constrained writing environment plus some features that may inspire them.
+The name "Austeur", pronounced /ɔˈstu̇r/ ([how it sounds](http://ipa-reader.xyz/?text=%C9%94%CB%88stu%CC%87r)), is a combination of "auteur", which means a creator whose style and practice are distinctive, and "austere", which means being strict or severe in discipline. This reflects the application's philosophy which is to provide user with a constrained writing environment plus some features that may inspire them.
