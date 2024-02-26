@@ -1,0 +1,10 @@
+@define-color accent_color #d00019;
+@define-color outlined_button_outline_color #343434;
+
+popover.menu.destruction-at-last stack > box > box > box:last-child modelbutton accelerator {
+  color: mix(@destructive_color, @dark_3, 0.4);
+}
+
+.sidebar-pane {
+	background-color: alpha(#323232, 1);
+}

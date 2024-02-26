@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+  Copyright 2024 kinten108101
+
+  GtkSourceView is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
+
+  GtkSourceView is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
+
+  You should have received a copy of the GNU Lesser General Public License
+  along with this library; if not, see <http://www.gnu.org/licenses/>.
+
+-->
+<style-scheme id="austeur-default-dark" _name="Austeur Default Dark" version="1.0">
+  <author>kinten108101</author>
+  <_description></_description>
+
+  <metadata>
+    <property name="variant">dark</property>
+  </metadata>
+
+  <!-- Named Colors -->
+
+  <!-- Global Styles -->
+  <style name="text" background="#242424" foreground="#ffffff"/>
+
+</style-scheme>

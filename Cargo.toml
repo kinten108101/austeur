@@ -1,0 +1,47 @@
+[package]
+name = "austeur"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies.gettext-rs]
+version = "0.7"
+features = ["gettext-system"]
+
+[dependencies.relm4]
+version = "0.6"
+features = ["macros", "libadwaita", "gnome_44"]
+
+[dependencies.relm4-icons]
+features = [
+	"grid-filled",
+	"lightbulb",
+	"loupe",
+	"paper",
+	"plus",
+	"text-justify-left",
+	"text-squiggly",
+	"uppercase"
+]
+
+[dependencies.libadwaita]
+features = ["v1_4"]
+
+[dependencies.sourceview5]
+version = "0.6"
+
+# Placeholder
+[dependencies.words-count]
+version = "0.1"
+
+# Placeholder
+[dependencies.regex]
+version = "1.10.3"
+
+[dependencies.lazy_static]
+version = "1.4.0"
+
+[dependencies.json]
+version = "0.12.4"
+
+[dependencies.tracker]
+version = "0.1"

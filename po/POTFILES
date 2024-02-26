@@ -1,0 +1,4 @@
+data/com.github.kinten108101.Austeur.desktop.in.in
+data/com.github.kinten108101.Austeur.gschema.xml.in
+data/com.github.kinten108101.Austeur.metainfo.xml.in.in
+src/app.rs

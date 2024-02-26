@@ -1,0 +1,115 @@
+@define-color accent_color #bd242c;
+@define-color outlined_button_outline_color #e9e8e6;
+
+button.wide {
+	padding-left: 12px;
+	padding-right: 12px;
+}
+
+button.thin {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+button.outlined {
+	border: solid @outlined_button_outline_color 1px;
+}
+
+button.outlined:not(:hover) {
+	background: transparent;
+}
+
+button.outlined-white {
+	border: solid alpha(@light_1, 0.15) 1px;
+}
+
+button.outlined-white:not(:hover) {
+	background: transparent;
+}
+
+menubutton.primary.flat image,
+button.primary.flat label,
+button.primary.flat image,
+button.primary.outlined label,
+button.primary.outlined image {
+  color: @accent_color;
+}
+
+popover.menu.destruction-at-last stack > box > box > box:last-child modelbutton label {
+  color: @destructive_color;
+}
+
+popover.menu.destruction-at-last stack > box > box > box:last-child modelbutton accelerator {
+  color: mix(@destructive_color, @light_3, 0.5);
+}
+
+.hollow-full {
+  opacity: 0.5;
+  transition-property: opacity;
+  transition-delay: 1s;
+  transition-duration: 300ms;
+}
+
+.hollow-full:hover {
+  opacity: 1;
+  transition-property: opacity;
+  transition-delay: 0s;
+  transition-duration: 500ms;
+}
+
+.font-base {
+	font-weight: normal;
+}
+
+.font-medium {
+	font-weight: 600;
+}
+
+.text-accent-fg {
+	color: @accent_fg_color;
+}
+
+.bg-accent {
+	background-color: @accent_color;
+}
+
+.text-accent {
+	color: @accent_color;
+}
+
+.sourceview.title {
+	font-weight: bold;
+	font-size: large;
+}
+
+.sourceview.transparent {
+	opacity: 0;
+}
+
+.text-large {
+	font-size: large;
+}
+
+.font-bold {
+	font-weight: bold;
+}
+
+.austeur-home row label.title {
+	font-weight: 600;
+}
+
+.austeur-home row label.subtitle {
+	opacity: 100;
+}
+
+.austeur-home box.header label.heading {
+	color: @light_5;
+}
+
+.austeur-home .body.description {
+	color: @light_5;
+}
+
+.sidebar-pane {
+	background-color: alpha(#D2D3D9, 0.5);
+}
