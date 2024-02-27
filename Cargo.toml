@@ -26,6 +26,7 @@ features = [
 [dependencies.libadwaita]
 features = ["v1_4"]
 
+# Experimental
 [dependencies.sourceview5]
 version = "0.6"
 
