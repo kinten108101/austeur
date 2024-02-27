@@ -13,10 +13,10 @@ features = ["macros", "libadwaita", "gnome_44"]
 
 [dependencies.relm4-icons]
 features = [
-	"grid-filled",
 	"lightbulb",
 	"loupe",
 	"paper",
+	"pip-out",
 	"plus",
 	"text-justify-left",
 	"text-squiggly",

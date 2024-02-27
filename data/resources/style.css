@@ -113,3 +113,7 @@ popover.menu.destruction-at-last stack > box > box > box:last-child modelbutton 
 .sidebar-pane {
 	background-color: alpha(#D2D3D9, 0.5);
 }
+
+.sourceview {
+	font-family: "Ubuntu Mono", monospace;
+}

@@ -64,6 +64,7 @@ pub enum AppMsg {
 
 relm4::new_action_group!(AppActionGroup, "app");
 relm4::new_stateless_action!(QuitAction, AppActionGroup, "quit");
+relm4::new_stateless_action!(FormattingAction, AppActionGroup, "formatting");
 relm4::new_stateless_action!(DeleteAction, AppActionGroup, "delete");
 
 fn strip_headings(src: &str) -> Vec<&str> {
@@ -130,7 +131,7 @@ impl SimpleComponent for App {
 	menu! {
 		primary_menu: {
 			section! {
-				custom: "buttons",
+				&i18n("_Formatting") => FormattingAction,
 			},
 
 			section! {
@@ -206,8 +207,9 @@ impl SimpleComponent for App {
 
 		#[root]
 		main_window = adw::ApplicationWindow::new(&main_application()) {
-			set_default_width: 800,
-			set_default_height: 460,
+			set_default_width: 940,
+			set_default_height: 400,
+			set_resizable: false,
 
 			connect_close_request[sender] => move |_| {
 				sender.input(AppMsg::Quit);
@@ -223,8 +225,30 @@ impl SimpleComponent for App {
 						adw::HeaderBar {
 
 							#[wrap(Some)]
-							set_title_widget = &adw::WindowTitle {
-								set_title: "Austeur",
+							set_title_widget = &gtk::SearchEntry {
+							},
+
+							pack_start = &gtk::Button {
+								add_css_class: "thin",
+								add_css_class: "bg-accent",
+								add_css_class: "text-accent-fg",
+								set_halign: gtk::Align::End,
+
+								connect_clicked[sender] => move |_| {
+									sender.input(AppMsg::SwitchWindowPage(WindowPage::Editor));
+								},
+
+								gtk::Box {
+									set_spacing: 4,
+
+									gtk::Image {
+										set_icon_name: Some("plus-symbolic"),
+									},
+
+									gtk::Label {
+										set_label: &i18n("New Idea"),
+									},
+								},
 							},
 
 							pack_end = &gtk::MenuButton {
@@ -249,37 +273,6 @@ impl SimpleComponent for App {
 									set_margin_bottom: 12,
 									set_spacing: 12,
 									set_orientation: gtk::Orientation::Vertical,
-
-									gtk::Box {
-										add_css_class: "linked",
-
-										gtk::SearchEntry {
-											set_hexpand: true,
-										},
-
-										gtk::Button {
-											add_css_class: "thin",
-											add_css_class: "bg-accent",
-											add_css_class: "text-accent-fg",
-											set_halign: gtk::Align::End,
-
-											connect_clicked[sender] => move |_| {
-												sender.input(AppMsg::SwitchWindowPage(WindowPage::Editor));
-											},
-
-											gtk::Box {
-												set_spacing: 4,
-
-												gtk::Image {
-													set_icon_name: Some("plus-symbolic"),
-												},
-
-												gtk::Label {
-													set_label: &i18n("New Idea"),
-												},
-											},
-										},
-									},
 
 									adw::PreferencesGroup {
 										set_title: "Ideas",
@@ -387,9 +380,8 @@ impl SimpleComponent for App {
 									},
 
 									pack_start = &gtk::Button {
-										set_icon_name: "grid-filled-symbolic",
+										set_icon_name: "pip-out-symbolic",
 										set_tooltip_text: Some(&i18n("View Projects")),
-										add_css_class: "circular",
 
 										connect_clicked[sender] => move |_| {
 											sender.input(AppMsg::SwitchWindowPage(WindowPage::Home));
@@ -399,32 +391,9 @@ impl SimpleComponent for App {
 									pack_end = &gtk::MenuButton {
 										set_icon_name: "view-more-symbolic",
 										set_tooltip_text: Some(&i18n("Menu")),
-										add_css_class: "circular",
 										set_primary: true,
 										set_popover: Some(&{
 											let popover = gtk::PopoverMenu::from_model(Some(&primary_menu));
-
-											relm4::view! {
-												widgets = gtk::Box {
-													set_spacing: 4,
-
-													gtk::Button {
-														set_tooltip_text: Some(&i18n("Formatting")),
-														set_icon_name: "uppercase-symbolic",
-														add_css_class: "flat",
-														add_css_class: "wide",
-													},
-
-													gtk::Button {
-														set_tooltip_text: Some(&i18n("History")),
-														set_icon_name: "uppercase-symbolic",
-														add_css_class: "flat",
-														add_css_class: "wide",
-													}
-												},
-											}
-
-											popover.add_child(&widgets, "buttons");
 											popover.add_css_class("destruction-at-last");
 											popover
 										}),
@@ -467,7 +436,7 @@ impl SimpleComponent for App {
 											set_label: "findreplace",
 										}
 									}
-								}
+								},
 							},
 						},
 						#[wrap(Some)]
@@ -514,10 +483,16 @@ impl SimpleComponent for App {
 									}
 								} else {
 									adw::HeaderBar {
-										pack_start = &gtk::Button {
+										#[wrap(Some)]
+										set_title_widget = &gtk::Label {
+											set_label: "Rô-bô Pilot",
+											add_css_class: "font-bold",
+										},
+
+										pack_end = &gtk::Button {
 											set_tooltip_text: Some(&i18n("Show Statistics")),
 											#[track = "model.changed(App::word_count())"]
-											set_label: &format!("{} _Words", model.word_count),
+											set_label: &format!("{}", model.word_count),
 											set_use_underline: true,
 											#[iterate]
 											add_css_class: vec!["font-medium", "thin", "outlined", "primary"],
@@ -527,18 +502,22 @@ impl SimpleComponent for App {
 											},
 										},
 
-										pack_end = &gtk::Button {
+										pack_start = &gtk::Button {
 											set_tooltip_text: Some(&i18n("Generate Prompt")),
-											set_icon_name: "lightbulb-symbolic",
 											#[iterate]
-											add_css_class: vec!["circular", "outlined", "primary"],
-										},
+											add_css_class: vec!["thin", "outlined", "primary"],
 
-										pack_end = &gtk::Button {
-											set_tooltip_text: Some(&i18n("Styling")),
-											set_icon_name: "uppercase-symbolic",
-											#[iterate]
-											add_css_class: vec!["circular", "outlined", "primary"],
+											gtk::Box {
+												set_spacing: 4,
+
+												gtk::Image {
+													set_icon_name: Some("lightbulb-symbolic"),
+												},
+
+												gtk::Label {
+													set_label: "Prompt"
+												},
+											},
 										},
 									}
 								},
@@ -549,40 +528,13 @@ impl SimpleComponent for App {
 									set_hscrollbar_policy: gtk::PolicyType::Never,
 
 									adw::Clamp {
-										set_maximum_size: 400,
+										set_maximum_size: 800,
+
 										gtk::Box {
 											set_orientation: gtk::Orientation::Vertical,
 											set_margin_top: 6,
+											set_margin_bottom: 24,
 											set_spacing: 6,
-
-											gtk::Overlay {
-												add_overlay = &sourceview5::View::with_buffer(&editor_title_text_buffer) {
-													set_hexpand: true,
-													set_wrap_mode: gtk::WrapMode::None,
-													set_accepts_tab: false,
-													set_left_margin: 16,
-													set_right_margin: 8,
-													add_css_class: "font-bold",
-													add_css_class: "text-large",
-													#[track = "model.changed(App::title())"]
-													add_css_class: {
-														if model.title.len() <= 0 { "transparent" } else { "null" }
-													},
-													#[track = "model.changed(App::title())"]
-													remove_css_class: {
-														if model.title.len() <= 0 { "null" } else { "transparent" }
-													},
-												},
-
-												gtk::Label {
-													set_label: &i18n("Title"),
-													set_margin_start: 16,
-													add_css_class: "dim-label",
-													add_css_class: "font-bold",
-													add_css_class: "text-large",
-													set_xalign: 0.0,
-												},
-											},
 
 											sourceview5::View::with_buffer(&text_view_buffer) {
 												set_hexpand: true,
@@ -654,8 +606,6 @@ impl SimpleComponent for App {
 
 	    actions.register_for_main_application();
 
-		widgets.load_window_size();
-
 		ComponentParts { model, widgets }
 	}
 
@@ -701,6 +651,12 @@ impl SimpleComponent for App {
 }
 
 impl AppWidgets {
+	fn load_editor(&self) -> Result<(), glib::BoolError> {
+		//
+
+		Ok(())
+	}
+
 	fn save_window_size(&self) -> Result<(), glib::BoolError> {
 		let settings = gio::Settings::new(APP_ID);
 		let (width, height) = self.main_window.default_size();
