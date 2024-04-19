@@ -1,0 +1,12 @@
+app_id = "com.github.kinten108101.Austeur"
+
+icons = [
+	"lightbulb",
+	"loupe",
+	"paper",
+	"pip-out",
+	"plus",
+	"text-justify-left",
+	"text-squiggly",
+	"uppercase"
+]

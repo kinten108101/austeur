@@ -213,7 +213,7 @@ impl SimpleComponent for App {
 
 			connect_close_request[sender] => move |_| {
 				sender.input(AppMsg::Quit);
-				gtk::Inhibit(true)
+				glib::Propagation::Stop
 			},
 
 			#[transition = "Crossfade"]

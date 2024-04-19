@@ -8,27 +8,20 @@ version = "0.7"
 features = ["gettext-system"]
 
 [dependencies.relm4]
-version = "0.6"
-features = ["macros", "libadwaita", "gnome_44"]
+version = "0.8"
+features = ["macros", "libadwaita", "gnome_46"]
 
 [dependencies.relm4-icons]
-features = [
-	"lightbulb",
-	"loupe",
-	"paper",
-	"pip-out",
-	"plus",
-	"text-justify-left",
-	"text-squiggly",
-	"uppercase"
-]
 
 [dependencies.libadwaita]
-features = ["v1_4"]
+features = ["v1_5"]
 
 # Experimental
 [dependencies.sourceview5]
-version = "0.6"
+version = "0.8"
+
+# Experimental
+[dependencies.webkit6]
 
 # Placeholder
 [dependencies.words-count]
