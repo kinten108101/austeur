@@ -1,0 +1,15 @@
+[default]
+name=Default
+runtime=host
+toolchain=default
+config-opts=
+run-opts=
+prefix=/home/kinten/.var/app/org.gnome.Builder/cache/gnome-builder/install/austeur/host
+app-id=
+postbuild=
+prebuild=
+run-command=
+default=true
+builddir=false
+
+[default.environment]
