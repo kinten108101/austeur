@@ -1,7 +1,12 @@
+// SPDX-FileContributor: Le Nguyen Gia Bao <kinten108101@protonmail.com>
+//
+// SPDX-License-Identifier: MIT
+
 mod app;
 #[rustfmt::skip]
 mod config;
 mod i18n;
+mod toc;
 
 use gettextrs::{gettext, LocaleCategory};
 
@@ -39,6 +44,9 @@ fn main() -> () {
 
     let res = gio::Resource::load(RESOURCES_FILE).expect("Could not load gresource file");
     gio::resources_register(&res);
+    let history_html = res
+    	.lookup_data("/com/github/kinten108101/Austeur/history-index.html", gio::ResourceLookupFlags::NONE)
+    	.unwrap();
 
     let text_style_manager = sourceview5::StyleSchemeManager::default();
 	text_style_manager.set_search_path(&[PKGDATADIR,]);
@@ -48,5 +56,5 @@ fn main() -> () {
     let app = main_application();
     app.set_resource_base_path(Some("/com/github/kinten108101/Austeur"));
     let app = RelmApp::from_app(app);
-    app.run::<App>((SidebarPage::Sections, text_style_manager, WindowPage::Home));
+    app.run::<App>((SidebarPage::Sections, text_style_manager, WindowPage::Home, history_html));
 }

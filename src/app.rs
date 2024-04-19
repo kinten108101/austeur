@@ -7,21 +7,23 @@ use std::{
 use tracker::track;
 
 use relm4::{
-	gtk, gtk::prelude::*, gtk::{gio, glib},
-	adw, adw::prelude::*,
-	actions::{
-		RelmAction, RelmActionGroup, AccelsPlus,
-	},
-	main_application, Component, ComponentParts, ComponentSender,
-	Controller, SimpleComponent,
+    adw, adw::prelude::*, actions::{AccelsPlus, RelmAction, RelmActionGroup},
+    factory::{FactoryVecDeque},
+    gtk, gtk::prelude::*, gtk::{gio, glib},
+    Component, ComponentParts, ComponentSender, Controller, main_application, SimpleComponent,
 };
 
 use crate::{
 	config::{APP_ID},
 	i18n::i18n,
+	toc::{
+		Section
+	}
 };
 
 use sourceview5::prelude::*;
+
+use webkit6::prelude::*;
 
 #[derive(Debug, PartialEq)]
 pub(super) enum WindowPage {
@@ -35,6 +37,7 @@ pub(super) enum SidebarPage {
 	Formatting,
 	SpellCheck,
 	FindReplace,
+	History,
 }
 
 #[tracker::track]
@@ -48,7 +51,9 @@ pub(super) struct App {
 	ideas: Vec<String>,
 	title: String,
 	text: String,
-	headings: Vec<String>,
+	#[tracker::do_not_track]
+	headings: FactoryVecDeque<Section>,
+	headings_created: u8,
 }
 
 #[derive(Debug)]
@@ -120,7 +125,7 @@ impl App {
 
 #[relm4::component(pub)]
 impl SimpleComponent for App {
-	type Init = (SidebarPage,sourceview5::StyleSchemeManager,WindowPage);
+	type Init = (SidebarPage, sourceview5::StyleSchemeManager, WindowPage, glib::Bytes);
 	type Input = AppMsg;
 	type Output = ();
 
@@ -137,11 +142,16 @@ impl SimpleComponent for App {
 			section! {
 				&i18n("_Delete") => DeleteAction,
 			}
+		},
+		statistics_menu: {
+			section! {
+				&i18n("_Formatting") => FormattingAction,
+			},
 		}
 	}
 
 	view! {
-		adw::StyleManager::default() {
+		adw::StyleManager {
 			connect_dark_notify[sender] => move |style_manager| {
 				sender.input(AppMsg::ChangeTheme(style_manager.is_dark()));
 			},
@@ -177,39 +187,10 @@ impl SimpleComponent for App {
 			},
 		},
 
-		stat_dialog = adw::Window {
-    		set_hide_on_close: true,
-    		set_modal: true,
-    		set_transient_for: Some(root),
-    		#[track = "model.changed(App::is_stat_dialog_visible())"]
-    		set_visible: model.is_stat_dialog_visible,
-
-    		connect_close_request[sender] => move |_| {
-				sender.input(AppMsg::ToggleStatDialog);
-				gtk::Inhibit(true)
-			},
-
-    		adw::ToolbarView {
-    			add_top_bar = &adw::HeaderBar {
-    				#[wrap(Some)]
-    				set_title_widget = &adw::WindowTitle {
-    					set_title: &i18n("Statistics"),
-    				},
-    			},
-
-    			#[wrap(Some)]
-    			set_content = &gtk::Box {
-    				set_width_request: 300,
-    				set_height_request: 300,
-    			},
-    		}
-    	},
-
 		#[root]
 		main_window = adw::ApplicationWindow::new(&main_application()) {
 			set_default_width: 940,
-			set_default_height: 400,
-			set_resizable: false,
+			set_default_height: 360,
 
 			connect_close_request[sender] => move |_| {
 				sender.input(AppMsg::Quit);
@@ -344,7 +325,7 @@ impl SimpleComponent for App {
 											set_tooltip_text: Some(&i18n("Sections")),
 											add_css_class: "wide",
 											add_css_class: "flat",
-											#[track = "model.changed(App::visible_sidebar_page())"]
+											#[watch]
 											set_active: model.visible_sidebar_page == SidebarPage::Sections,
 
 											connect_clicked[sender] => move |_| {
@@ -357,7 +338,7 @@ impl SimpleComponent for App {
 											set_tooltip_text: Some(&i18n("Spell Check")),
 											add_css_class: "wide",
 											add_css_class: "flat",
-											#[track = "model.changed(App::visible_sidebar_page())"]
+											#[watch]
 											set_active: model.visible_sidebar_page == SidebarPage::SpellCheck,
 
 											connect_clicked[sender] => move |_| {
@@ -370,11 +351,24 @@ impl SimpleComponent for App {
 											set_tooltip_text: Some(&i18n("Find & Replace")),
 											add_css_class: "wide",
 											add_css_class: "flat",
-											#[track = "model.changed(App::visible_sidebar_page())"]
+											#[watch]
 											set_active: model.visible_sidebar_page == SidebarPage::FindReplace,
 
 											connect_clicked[sender] => move |_| {
 												sender.input(AppMsg::SwitchSidebarPage(SidebarPage::FindReplace));
+											},
+										},
+
+										gtk::ToggleButton {
+											set_icon_name: "history-undo-symbolic",
+											set_tooltip_text: Some(&i18n("History")),
+											add_css_class: "wide",
+											add_css_class: "flat",
+											#[watch]
+											set_active: model.visible_sidebar_page == SidebarPage::History,
+
+											connect_clicked[sender] => move |_| {
+												sender.input(AppMsg::SwitchSidebarPage(SidebarPage::History));
 											},
 										},
 									},
@@ -406,7 +400,13 @@ impl SimpleComponent for App {
 										gtk::Box {
 											if model.headings.len() > 0 {
 												gtk::Box {
-
+													#[local_ref]
+													headings_container -> gtk::Box {
+														add_css_class: "navigation-sidebar",
+														set_orientation: gtk::Orientation::Vertical,
+														set_hexpand: true,
+														set_spacing: 6,
+													}
 												}
 											} else {
 												adw::StatusPage {
@@ -435,6 +435,22 @@ impl SimpleComponent for App {
 										gtk::Label {
 											set_label: "findreplace",
 										}
+									},
+
+									SidebarPage::History => {
+										webkit6::WebView {
+											set_vexpand: true,
+											set_settings: history_webview_settings = &webkit6::Settings {
+									    		set_enable_write_console_messages_to_stdout: true,
+									            set_allow_top_navigation_to_data_urls: false,
+									            set_allow_universal_access_from_file_urls: false,
+									            set_enable_back_forward_navigation_gestures: false,
+									            // TODO(blq): Disable this in production builds.
+									            set_enable_developer_extras: true,
+									    	},
+											load_bytes: (&history_html, None, None, None),
+											set_background_color: &gtk::gdk::RGBA::new(0.0,0.0,0.0,0.0),
+								    	}
 									}
 								},
 							},
@@ -442,7 +458,7 @@ impl SimpleComponent for App {
 						#[wrap(Some)]
 						set_content = &adw::NavigationPage {
 							#[wrap(Some)]
-							set_child = &adw::ToolbarView {
+							set_child: a = &adw::ToolbarView {
 								add_top_bar = if model.is_page_empty {
 									adw::HeaderBar {
 										pack_end = &gtk::Button {
@@ -450,16 +466,9 @@ impl SimpleComponent for App {
 											#[iterate]
 											add_css_class: vec!["thin", "outlined", "primary"],
 
-											gtk::Box {
-												set_spacing: 4,
-
-												gtk::Image {
-													set_icon_name: Some("lightbulb-symbolic"),
-												},
-
-												gtk::Label {
-													set_label: "Prompt"
-												},
+											adw::ButtonContent {
+												set_icon_name: "lightbulb-symbolic",
+												set_label: "Prompt",
 											},
 										},
 
@@ -468,57 +477,42 @@ impl SimpleComponent for App {
 											#[iterate]
 											add_css_class: vec!["thin", "outlined", "primary"],
 
-											gtk::Box {
-												set_spacing: 4,
-
-												gtk::Image {
-													set_icon_name: Some("paper-symbolic"),
-												},
-
-												gtk::Label {
-													set_label: "Import"
-												},
+											adw::ButtonContent {
+												set_icon_name: "paper-symbolic",
+												set_label: "Import",
 											},
 										},
 									}
 								} else {
 									adw::HeaderBar {
-										#[wrap(Some)]
-										set_title_widget = &gtk::Label {
+										pack_start = &gtk::Label {
 											set_label: "Rô-bô Pilot",
 											add_css_class: "font-bold",
+											set_margin_start: 12,
 										},
 
 										pack_end = &gtk::Button {
+											set_tooltip_text: Some(&i18n("Generate Prompt")),
+											#[iterate]
+											add_css_class: vec!["thin", "outlined", "primary"],
+
+											adw::ButtonContent {
+												set_icon_name: "lightbulb-symbolic",
+												set_label: "Prompt",
+											},
+										},
+
+										pack_end: stat_button = &gtk::ToggleButton {
 											set_tooltip_text: Some(&i18n("Show Statistics")),
 											#[track = "model.changed(App::word_count())"]
 											set_label: &format!("{}", model.word_count),
-											set_use_underline: true,
 											#[iterate]
 											add_css_class: vec!["font-medium", "thin", "outlined", "primary"],
-
 											connect_clicked[sender] => move |_| {
 												sender.input(AppMsg::ToggleStatDialog);
 											},
 										},
 
-										pack_start = &gtk::Button {
-											set_tooltip_text: Some(&i18n("Generate Prompt")),
-											#[iterate]
-											add_css_class: vec!["thin", "outlined", "primary"],
-
-											gtk::Box {
-												set_spacing: 4,
-
-												gtk::Image {
-													set_icon_name: Some("lightbulb-symbolic"),
-												},
-
-												gtk::Label {
-													set_label: "Prompt"
-												},
-											},
-										},
 									}
 								},
 
@@ -555,12 +549,50 @@ impl SimpleComponent for App {
 		}
 	}
 
+	fn post_view() {
+		if model.changed(App::is_stat_dialog_visible()) {
+			if model.is_stat_dialog_visible {
+				let main_window = main_window.clone();
+				relm4::view! {
+					stat_dialog = adw::Dialog {
+						set_content_width: 300,
+						set_content_height: 300,
+						set_presentation_mode: adw::DialogPresentationMode::Floating,
+						connect_closed[sender] => move |_| {
+							sender.input(AppMsg::ToggleStatDialog);
+						},
+
+			    		#[wrap(Some)]
+			    		set_child = &adw::ToolbarView {
+			    			add_top_bar = &adw::HeaderBar {
+			    				#[wrap(Some)]
+			    				set_title_widget = &adw::WindowTitle {
+			    					set_title: &i18n("Statistics"),
+			    				},
+			    			},
+
+			    			#[wrap(Some)]
+			    			set_content = &gtk::Box {
+			    				set_width_request: 300,
+
+			    				adw::ActionRow {
+			    					set_title: "Hi",
+			    				},
+			    			},
+			    		}
+			    	},
+				}
+				stat_dialog.present(&main_window);
+			}
+		}
+	}
+
 	fn init(
 		init: Self::Init,
-		root: &Self::Root,
+		root: Self::Root,
 		sender: ComponentSender<Self>,
 	) -> ComponentParts<Self> {
-		let (visible_sidebar_page, text_style_manager, visible_window_page) = init;
+		let (visible_sidebar_page, text_style_manager, visible_window_page, history_html) = init;
 
 		let mut ideas = Vec::<String>::new();
 		ideas.push("51a".to_string()); // placeholder
@@ -577,9 +609,14 @@ impl SimpleComponent for App {
 			ideas,
 			title: "".to_string(),
 			text: "".try_into().unwrap(),
-			headings: Vec::new(),
+			headings: FactoryVecDeque::builder()
+				.launch(gtk::Box::default())
+				.forward(sender.input_sender(), |_| { AppMsg::Quit }),
+			headings_created: 0,
             tracker: 0,
 		};
+
+		let headings_container = model.headings.widget();
 
 		let widgets = view_output!();
 
@@ -628,12 +665,19 @@ impl SimpleComponent for App {
 				self.set_word_count(words);
 				self.set_is_page_empty(*self.get_word_count() <= 0);
 				let text_a = text.as_str();
-				let headings: Vec<String> = strip_headings(text_a).into_iter().map(|x: &str| x.to_owned()).collect();
-				println!("headings: {}", {
-					let headings = headings.clone();
-					headings.into_iter().fold("".to_string(), |acc: String, x: String| acc + &x)
+				let headings_raw: Vec<String> = strip_headings(text_a).into_iter().map(|x: &str| x.to_owned()).collect();
+				println!("headings_raw: {}", {
+					let headings_raw = headings_raw.clone();
+					headings_raw.into_iter().fold("".to_string(), |acc: String, x: String| acc + &x)
 				});
-				self.set_headings(headings);
+				self.headings.guard().clear();
+				self.set_headings_created(0);
+				for i in 0..headings_raw.len() {
+					let index = *self.get_headings_created();
+					let name = &headings_raw[i];
+					self.headings.guard().push_back((index, name.to_string()));
+					self.set_headings_created(self.get_headings_created().wrapping_add(1));
+				}
 				self.set_text(text);
 			},
 			AppMsg::ChangeTitle(text) => {

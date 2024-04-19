@@ -1,28 +1,34 @@
 @define-color accent_color #bd242c;
 @define-color outlined_button_outline_color #e9e8e6;
 
+menubutton.wide,
 button.wide {
 	padding-left: 12px;
 	padding-right: 12px;
 }
 
+menubutton.thin,
 button.thin {
 	padding-top: 0;
 	padding-bottom: 0;
 }
 
+menubutton.outlined,
 button.outlined {
 	border: solid @outlined_button_outline_color 1px;
 }
 
+menubutton.outlined:not(:hover),
 button.outlined:not(:hover) {
 	background: transparent;
 }
 
+menubutton.outlined-white,
 button.outlined-white {
 	border: solid alpha(@light_1, 0.15) 1px;
 }
 
+menubutton.outlined-white:not(:hover),
 button.outlined-white:not(:hover) {
 	background: transparent;
 }
@@ -30,6 +36,8 @@ button.outlined-white:not(:hover) {
 menubutton.primary.flat image,
 button.primary.flat label,
 button.primary.flat image,
+menubutton.primary.outlined label,
+menubutton.primary.outlined image,
 button.primary.outlined label,
 button.primary.outlined image {
   color: @accent_color;
@@ -116,4 +124,8 @@ popover.menu.destruction-at-last stack > box > box > box:last-child modelbutton 
 
 .sourceview {
 	font-family: "Ubuntu Mono", monospace;
+}
+
+box.navigation-sidebar > button > label {
+	font-weight: normal;
 }

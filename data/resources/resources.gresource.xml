@@ -3,5 +3,6 @@
 	<gresource prefix="/com/github/kinten108101/Austeur/">
 		<file compressed="true">style.css</file>
 		<file compressed="true">style-dark.css</file>
+		<file compressed="true" alias="history-index.html">js/history.html</file>
 	</gresource>
 </gresources>
